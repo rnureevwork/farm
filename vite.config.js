@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
+import vuetify from 'vite-plugin-vuetify';
 
 export default defineConfig({
     plugins: [
@@ -10,7 +11,6 @@ export default defineConfig({
                 'resources/sass/app.scss',
                 'resources/js/app.js',
             ],
-            // reactivityTransform: true,
             refresh: true,
         }),
         vue({
@@ -21,10 +21,30 @@ export default defineConfig({
                 },
             },
         }),
+        vuetify({
+            autoImport: true,
+        }),
     ],
-    // build: {
-    //     chunkSizeWarningLimit: 1600,
-    // },
+    build: {
+        outDir: 'public/build',
+        assetsDir: '',
+        manifest: true,
+        sourcemap: false,
+        minify: 'esbuild',
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['vue', 'vue-router', 'pinia'],
+                },
+            },
+        },
+    },
+    server: {
+        host: 'localhost',
+        hmr: {
+            host: 'localhost',
+        },
+    },
     resolve: {
         alias: {
             vue: 'vue/dist/vue.esm-bundler.js',

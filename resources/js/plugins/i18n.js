@@ -5,8 +5,8 @@ const i18n = createI18n({
     legacy: false, // you must set `false`, to use Composition API
     globalInjection: true,
     runtimeOnly: false,
-    locale: 'en', // set locale
-    fallbackLocale: 'en', // set fallback locale
+    locale: 'ru', // set locale
+    fallbackLocale: 'ru', // set fallback locale
     messages: {} // set locale messages
 })
 
@@ -26,8 +26,8 @@ export async function loadMessages(locale) {
 
 (async () => {
     try {
-        // Load initial locale message (e.g., 'en')
-        await loadMessages('en');
+        // Load initial locale message (e.g., 'ru')
+        await loadMessages('ru');
 
         const store = await useLangStore();
         const { langLocale } = store;

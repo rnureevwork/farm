@@ -1,7 +1,7 @@
 {
     "name": "laravel/laravel",
     "type": "project",
-    "description": "A Laravel Vue SPA starter project",
+    "description": "Laravel",
     "keywords": ["spa", "laravel", "vue"],
     "license": "MIT",
     "require": {

@@ -7,14 +7,31 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'Meteo El-Agro') }}</title>
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
 
     <!-- Scripts -->
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    @if(app()->environment('production'))
+        <!-- Production: Load built assets -->
+        @php
+            $manifestPath = public_path('build/manifest.json');
+            $manifest = file_exists($manifestPath) ? json_decode(file_get_contents($manifestPath), true) : [];
+        @endphp
+        
+        @if(isset($manifest['resources/sass/app.scss']))
+            <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/sass/app.scss']['file']) }}">
+        @endif
+        
+        @if(isset($manifest['resources/js/app.js']))
+            <script type="module" src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}"></script>
+        @endif
+    @else
+        <!-- Development: Use Vite -->
+        @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    @endif
 </head>
 <body>
     <div id="app">

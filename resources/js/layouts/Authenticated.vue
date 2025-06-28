@@ -1,118 +1,125 @@
 <template>
-    <AdminNavbar />
-    <div class="d-flex align-items-stretch w-100">
-        <AdminSidebar />
-        <div class="container-fluid">
-            <Breadcrumb class="row justify-content-center mt-4" :crumbs="crumbs" @selected="selected" />
-            <!-- <h2 class="fw-semibold">
-                {{ crumbs }}
-            </h2> -->
-            <!-- Page Content -->
-            <div class="main">
-                <Suspense>
-                <router-view></router-view>
-                </Suspense>
-            </div>
-        </div>
-    </div>
+    <v-app>
+        <v-navigation-drawer
+            v-model="drawer"
+            :rail="rail"
+            permanent
+            @click="rail = false"
+        >
+            <v-list-item
+                prepend-avatar="https://randomuser.me/api/portraits/men/85.jpg"
+                :title="user?.name || 'Admin'"
+                nav
+            >
+                <template v-slot:append>
+                    <v-btn
+                        variant="text"
+                        icon="mdi-chevron-left"
+                        @click.stop="rail = !rail"
+                    ></v-btn>
+                </template>
+            </v-list-item>
+
+            <v-divider></v-divider>
+
+            <v-list density="compact" nav>
+                <v-list-item
+                    to="/admin/dashboard"
+                    prepend-icon="mdi-chart-line"
+                    title="Метео дашборд"
+                    value="meteo-dashboard"
+                ></v-list-item>
+                
+                <v-list-item
+                    to="/admin/farms"
+                    prepend-icon="mdi-domain"
+                    title="Фермы"
+                    value="farms"
+                ></v-list-item>
+                
+                <v-list-item
+                    to="/admin/stations"
+                    prepend-icon="mdi-weather-partly-cloudy"
+                    title="Метеостанции"
+                    value="stations"
+                ></v-list-item>
+                
+                <v-list-item
+                    to="/admin/fields"
+                    prepend-icon="mdi-map-marker"
+                    title="Поля"
+                    value="fields"
+                ></v-list-item>
+                
+                <v-list-item
+                    to="/admin/crops"
+                    prepend-icon="mdi-sprout"
+                    title="Культуры"
+                    value="crops"
+                ></v-list-item>
+                
+                <v-list-item
+                    to="/admin/alerts"
+                    prepend-icon="mdi-alert"
+                    title="Уведомления"
+                    value="alerts"
+                ></v-list-item>
+            </v-list>
+        </v-navigation-drawer>
+
+        <v-main>
+            <v-container fluid>
+                <v-breadcrumbs :items="breadcrumbs" class="mb-4"></v-breadcrumbs>
+                
+                <v-card>
+                    <v-card-text>
+                        <Suspense>
+                            <router-view></router-view>
+                        </Suspense>
+                    </v-card-text>
+                </v-card>
+            </v-container>
+        </v-main>
+    </v-app>
 </template>
 
 <script setup>
-import {computed} from "vue";
+import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
-import AdminNavbar from "../components/includes/AdminNavbar.vue";
-import AdminSidebar from "../components/includes/AdminSidebar.vue";
-import Breadcrumb from "../components/includes/Breadcrumb.vue";
+import { useAuthStore } from "@/store/auth";
 
 const route = useRoute();
+const authStore = useAuthStore();
+const drawer = ref(true);
+const rail = ref(false);
 
-const crumbs = computed(() => {
+const user = computed(() => authStore.user);
+
+const breadcrumbs = computed(() => {
     let pathArray = route.path.split('/')
-      pathArray.shift()
-      const breadCrumbs = [{ "href": "/admin", "disabled": false, "text": "Dashboard" }]
-      // needed to handle the intermediary entries for nested vue routes
-      let breadcrumb = ''
-      let lastIndexFound = 0
-      for (let i = 0; i < pathArray.length; ++i) {
+    pathArray.shift()
+    const breadCrumbs = [{ title: 'Dashboard', to: '/admin' }]
+    
+    let breadcrumb = ''
+    let lastIndexFound = 0
+    for (let i = 0; i < pathArray.length; ++i) {
         breadcrumb = `${breadcrumb}${'/'}${pathArray[i]}`
         if (route.matched[i] &&
-          Object.hasOwnProperty.call(route.matched[i], 'meta') &&
-          Object.hasOwnProperty.call(route.matched[i].meta, 'breadCrumb')) {
-          breadCrumbs.push({
-            href: i !== 0 && pathArray[i - (i - lastIndexFound)]
-              ? '/' + pathArray[i - (i - lastIndexFound)] + breadcrumb
-              : breadcrumb,
-            disabled: i + 1 === pathArray.length,
-            text: route.matched[i].meta.breadCrumb || pathArray[i]
-          })
-          lastIndexFound = i
-          breadcrumb = ''
+            Object.hasOwnProperty.call(route.matched[i], 'meta') &&
+            Object.hasOwnProperty.call(route.matched[i].meta, 'breadCrumb')) {
+            breadCrumbs.push({
+                title: route.matched[i].meta.breadCrumb || pathArray[i],
+                to: breadcrumb,
+                disabled: i + 1 === pathArray.length
+            })
+            lastIndexFound = i
+            breadcrumb = ''
         }
-      }
-      return breadCrumbs
+    }
+    return breadCrumbs
 });
-
-function selected(crumb) {
-    // console.log(crumb);
-}
-
 </script>
 
 <style scoped>
-.navbar-brand {
-    padding-top: .2rem;
-    padding-bottom: .2rem;
-    min-width: 250px;
-    max-width: 250px;
-    align-self: stretch;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    transition: all .3s linear;
-}
-
-.main-content, .sidebar {
-    height: calc(100vh - 56px);
-    overflow-x: hidden;
-    overflow-y: auto;
-}
-
-.sidebar {
-    position: relative;
-    z-index: 100;
-    box-shadow: 1px 0 10px rgba(0, 0, 0, .1);
-    min-width: 250px;
-    max-width: 250px;
-    transition: all .3s linear;
-}
-
-.sidebar.mini {
-    min-width: 60px;
-    max-width: 60px;
-}
-
-.sidebar ul li a.active, .sidebar ul li a:hover {
-    color: #4a6cf7;
-    border-color: rgba(74, 108, 247, 0.15);
-    background: rgba(74, 108, 247, 0.1);
-}
-
-@media (max-width: 767.98px) {
-    .navbar-brand, .sidebar {
-        min-width: 60px;
-        max-width: 60px;
-    }
-
-    .navbar-brand {
-        min-width: 60px;
-        max-width: 60px;
-    }
-
-    .navbar-brand span {
-        min-width: 20px;
-        max-width: 20px;
-        font-weight: 900;
-        overflow: hidden;
-    }
-}
+/* Стили теперь управляются Vuetify */
 </style>

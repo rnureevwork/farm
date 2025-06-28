@@ -49,8 +49,12 @@ export default function useAuth() {
 
         await axios.post('/login', loginForm)
             .then(async response => {
+                if (response.data.token) {
+                    localStorage.setItem('auth_token', response.data.token)
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
+                }
+                
                 await authStore.getUser()
-                // await authStore.dispatch('auth/getUser')
                 await loginUser()
                 swal({
                     icon: 'success',
@@ -144,11 +148,19 @@ export default function useAuth() {
 
     const loginUser = () => {
         user = authStore.user
-        // Cookies.set('loggedIn', true)
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        }
         getAbilities()
     }
 
     const getUser = async () => {
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        }
+        
         if (authStore.authenticated) {
             await authStore.getUser()
             await loginUser()
@@ -164,19 +176,21 @@ export default function useAuth() {
             .then(response => {
                 user.name = ''
                 user.email = ''
+                localStorage.removeItem('auth_token')
+                delete axios.defaults.headers.common['Authorization']
                 authStore.logout()
                 router.push({ name: 'auth.login' })
             })
             .catch(error => {
-                // swal({
-                //     icon: 'error',
-                //     title: error.response.status,
-                //     text: error.response.statusText
-                // })
+                localStorage.removeItem('auth_token')
+                delete axios.defaults.headers.common['Authorization']
+                user.name = ''
+                user.email = ''
+                authStore.logout()
+                router.push({ name: 'auth.login' })
             })
             .finally(() => {
                 processing.value = false
-                // Cookies.remove('loggedIn')
             })
     }
 

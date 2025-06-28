@@ -9,10 +9,7 @@ const PostsEdit  = ()  => import('../views/admin/posts/Edit.vue');
 
 function requireLogin(to, from, next) {
     const auth = useAuthStore()
-    let isLogin = false;
-    isLogin = !!auth.authenticated;
-
-    if (isLogin) {
+    if (auth.authenticated) {
         next()
     } else {
         next('/login')
@@ -21,11 +18,8 @@ function requireLogin(to, from, next) {
 
 function guest(to, from, next) {
     const auth = useAuthStore()
-    let isLogin;
-    isLogin = !!auth.authenticated;
-
-    if (isLogin) {
-        next('/')
+    if (auth.authenticated) {
+        next('/admin')
     } else {
         next()
     }
@@ -204,6 +198,114 @@ export default [
                 path: 'activity-log-logs',
                 component: () => import('../views/admin/activity-log/Index.vue'),
                 meta: { breadCrumb: 'Activity Logs' }
+            },
+            {
+                name: 'stations.index',
+                path: 'stations',
+                component: () => import('../views/admin/stations/Index.vue'),
+                meta: { breadCrumb: 'Метеостанции' }
+            },
+            {
+                name: 'stations.create',
+                path: 'stations/create',
+                component: () => import('../views/admin/stations/Create.vue'),
+                meta: { breadCrumb: 'Добавить станцию' }
+            },
+            {
+                name: 'stations.edit',
+                path: 'stations/edit/:id',
+                component: () => import('../views/admin/stations/Edit.vue'),
+                meta: { breadCrumb: 'Редактировать станцию' }
+            },
+            {
+                name: 'stations.data',
+                path: 'stations/:id/data',
+                component: () => import('../views/admin/stations/Data.vue'),
+                meta: { breadCrumb: 'Данные станции' }
+            },
+            {
+                name: 'fields.index',
+                path: 'fields',
+                component: () => import('../views/admin/fields/Index.vue'),
+                meta: { breadCrumb: 'Поля' }
+            },
+            {
+                name: 'fields.create',
+                path: 'fields/create',
+                component: () => import('../views/admin/fields/Create.vue'),
+                meta: { breadCrumb: 'Добавить поле' }
+            },
+            {
+                name: 'fields.edit',
+                path: 'fields/edit/:id',
+                component: () => import('../views/admin/fields/Edit.vue'),
+                meta: { breadCrumb: 'Редактировать поле' }
+            },
+            {
+                name: 'fields.show',
+                path: 'fields/:id',
+                component: () => import('../views/admin/fields/Show.vue'),
+                meta: { breadCrumb: 'Детали поля' }
+            },
+            {
+                name: 'alerts.index',
+                path: 'alerts',
+                component: () => import('../views/admin/alerts/Index.vue'),
+                meta: { breadCrumb: 'Уведомления' }
+            },
+            {
+                name: 'alerts.show',
+                path: 'alerts/:id',
+                component: () => import('../views/admin/alerts/Show.vue'),
+                meta: { breadCrumb: 'Детали уведомления' }
+            },
+            {
+                name: 'dashboard',
+                path: 'dashboard',
+                component: () => import('../views/admin/dashboard/Index.vue'),
+                meta: { breadCrumb: 'Дашборд' }
+            },
+            {
+                name: 'farms.index',
+                path: 'farms',
+                component: () => import('../views/admin/farms/Index.vue'),
+                meta: { breadCrumb: 'Фермы' }
+            },
+            {
+                name: 'farms.create',
+                path: 'farms/create',
+                component: () => import('../views/admin/farms/Create.vue'),
+                meta: { breadCrumb: 'Добавить ферму' }
+            },
+            {
+                name: 'farms.edit',
+                path: 'farms/edit/:id',
+                component: () => import('../views/admin/farms/Edit.vue'),
+                meta: { breadCrumb: 'Редактировать ферму' }
+            },
+            {
+                name: 'farms.show',
+                path: 'farms/:id',
+                component: () => import('../views/admin/farms/Show.vue'),
+                meta: { breadCrumb: 'Детали фермы' }
+            },
+            {
+                name: 'crops.index',
+                path: 'crops',
+                component: () => import('../views/admin/crops/Index.vue'),
+                meta: { breadCrumb: 'Культуры' }
+            },
+            {
+                name: 'crops.create',
+                path: 'crops/create',
+                component: () => import('../views/admin/crops/Create.vue'),
+                meta: { breadCrumb: 'Добавить культуру' }
+            },
+            {
+                name: 'crops.edit',
+                path: 'crops/edit/:id',
+                component: () => import('../views/admin/crops/Edit.vue'),
+                meta: { breadCrumb: 'Редактировать культуру' }
             },
         ]
     },
