@@ -63,4 +63,17 @@ class StationController extends Controller
         
         return response()->json($data);
     }
+
+    public function moveStation(Request $request, Station $station): JsonResponse
+    {
+        $validated = $request->validate([
+            'field_id' => 'required|exists:fields,id'
+        ]);
+
+        $station->update(['field_id' => $validated['field_id']]);
+        return response()->json([
+            'message' => 'Станция успешно перенесена',
+            'station' => $station->load('field.farm')
+        ]);
+    }
 } 

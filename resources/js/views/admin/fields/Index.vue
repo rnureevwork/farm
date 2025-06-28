@@ -44,7 +44,7 @@
 
                                 <template v-slot:item.stations_count="{ item }">
                                     <v-chip color="info" small>
-                                        {{ item.stations?.length || 0 }} станций
+                                        {{ item.stations_count || 0 }} станций
                                     </v-chip>
                                 </template>
 

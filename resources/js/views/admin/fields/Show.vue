@@ -282,6 +282,69 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <!-- Диалог переноса станции -->
+        <v-dialog v-model="showMoveStationDialog" max-width="500px">
+            <v-card>
+                <v-card-title>
+                    Перенести станцию {{ selectedStation?.serial_number }}
+                </v-card-title>
+                
+                <v-card-text>
+                    <div v-if="availableFields.length === 0" class="text-center pa-4">
+                        <v-icon size="48" color="grey">mdi-map-marker-off</v-icon>
+                        <div class="text-subtitle-1 mt-2">Нет доступных полей для переноса</div>
+                        <div class="text-caption text-grey">Создайте новое поле, чтобы перенести станцию</div>
+                        <v-btn
+                            color="primary"
+                            class="mt-4"
+                            @click="createNewField"
+                        >
+                            Создать новое поле
+                        </v-btn>
+                    </div>
+                    <div v-else>
+                        <v-form ref="moveStationForm" v-model="moveStationFormValid">
+                            <label class="text-subtitle-2 mb-2 d-block">Выберите новое поле для станции:</label>
+                            <select 
+                                v-model="moveStationForm.field_id" 
+                                class="form-control"
+                                style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"
+                                required
+                            >
+                                <option value="">Выберите поле</option>
+                                <option 
+                                    v-for="field in availableFields" 
+                                    :key="field.id" 
+                                    :value="field.id"
+                                >
+                                    {{ field.name }} (ID: {{ field.id }})
+                                </option>
+                            </select>
+                        </v-form>
+                    </div>
+                </v-card-text>
+                
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        color="grey darken-1"
+                        text
+                        @click="closeMoveStationDialog"
+                    >
+                        Отмена
+                    </v-btn>
+                    <v-btn
+                        color="primary"
+                        @click="confirmMoveStation"
+                        :loading="movingStation"
+                        :disabled="!moveStationFormValid || availableFields.length === 0"
+                    >
+                        Перенести
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
 
@@ -295,6 +358,7 @@ export default {
             field: {},
             loading: false,
             crops: [],
+            allFields: [], // Все поля для переноса
             showCropRotationDialog: false,
             editingCropRotation: null,
             cropRotationFormValid: false,
@@ -303,6 +367,15 @@ export default {
                 crop_id: '',
                 planting_date: '',
                 harvest_date: ''
+            },
+            // Для переноса станции
+            showMoveStationDialog: false,
+            selectedStation: null,
+            availableFields: [],
+            moveStationFormValid: false,
+            movingStation: false,
+            moveStationForm: {
+                field_id: ''
             },
             cropRotationHeaders: [
                 { text: 'Культура', value: 'crop.name' },
@@ -322,17 +395,30 @@ export default {
         }
     },
     async mounted() {
+        console.log('=== КОМПОНЕНТ ЗАГРУЖЕН ===')
+        console.log('Route params:', this.$route.params)
+        
         await this.fetchField()
         await this.fetchCrops()
+        // Загружаем все поля заранее
+        await this.fetchAllFields()
+        
+        console.log('=== ЗАГРУЗКА ЗАВЕРШЕНА ===')
     },
     methods: {
         async fetchField() {
+            console.log('=== ВЫЗВАН fetchField ===')
             this.loading = true
             try {
+                console.log('Загружаем основное поле...')
                 const response = await axios.get(`/api/v1/fields/${this.$route.params.id}`)
+                console.log('Ответ API основного поля:', response)
                 this.field = response.data
+                console.log('Основное поле загружено:', this.field)
             } catch (error) {
                 console.error('Ошибка загрузки поля:', error)
+                console.error('Детали ошибки:', error.response?.data)
+                console.error('Статус ошибки:', error.response?.status)
                 alert('Ошибка при загрузке поля')
                 this.$router.push({ name: 'fields.index' })
             } finally {
@@ -340,11 +426,49 @@ export default {
             }
         },
         async fetchCrops() {
+            console.log('=== ВЫЗВАН fetchCrops ===')
             try {
                 const response = await axios.get('/api/v1/crops')
                 this.crops = response.data
+                console.log('Культуры загружены:', this.crops)
             } catch (error) {
                 console.error('Ошибка загрузки культур:', error)
+            }
+        },
+        async fetchAllFields() {
+            console.log('=== ВЫЗВАН fetchAllFields ===')
+            try {
+                console.log('Начинаем загрузку всех полей через фермы...')
+                
+                // Загружаем поля через фермы
+                const farmsResponse = await axios.get('/api/v1/farms')
+                console.log('Ответ API ферм:', farmsResponse)
+                
+                if (farmsResponse.data && farmsResponse.data.length > 0) {
+                    // Собираем все поля из всех ферм
+                    const allFields = []
+                    for (const farm of farmsResponse.data) {
+                        if (farm.fields && farm.fields.length > 0) {
+                            // Добавляем информацию о ферме к каждому полю
+                            const fieldsWithFarm = farm.fields.map(field => ({
+                                ...field,
+                                farm: { name: farm.name }
+                            }))
+                            allFields.push(...fieldsWithFarm)
+                        }
+                    }
+                    console.log('Все поля из ферм:', allFields)
+                    this.allFields = allFields
+                } else {
+                    console.warn('Нет ферм или полей в системе')
+                    this.allFields = []
+                }
+                
+            } catch (error) {
+                console.error('Ошибка загрузки всех полей:', error)
+                console.error('Детали ошибки:', error.response?.data)
+                console.error('Статус ошибки:', error.response?.status)
+                this.allFields = []
             }
         },
         editField() {
@@ -445,9 +569,54 @@ export default {
         viewStationData(station) {
             this.$router.push({ name: 'stations.data', params: { id: station.id } })
         },
-        moveStation(station) {
-            // TODO: Реализовать перемещение станции
-            alert('Функция перемещения станции будет реализована')
+        async moveStation(station) {
+            this.selectedStation = station
+            this.moveStationForm.field_id = ''
+            this.showMoveStationDialog = true
+            
+            // Фильтруем доступные поля из уже загруженных
+            const currentFieldId = parseInt(this.$route.params.id)
+            this.availableFields = this.allFields
+                .filter(field => field.id !== currentFieldId)
+                .map(field => ({
+                    id: field.id,
+                    name: field.name,
+                    farm_id: field.farm_id,
+                    area_hectares: field.area_hectares
+                }))
+            console.log('Доступные поля для переноса:', this.availableFields)
+            console.log('Количество доступных полей:', this.availableFields.length)
+            
+            // Проверяем структуру данных
+            if (this.availableFields.length > 0) {
+                console.log('Первое поле:', this.availableFields[0])
+                console.log('Название первого поля:', this.availableFields[0].name)
+            }
+        },
+        async confirmMoveStation() {
+            if (!this.moveStationFormValid) return
+
+            this.movingStation = true
+            try {
+                await axios.put(`/api/v1/stations/${this.selectedStation.id}/move`, {
+                    field_id: this.moveStationForm.field_id
+                })
+                
+                // Обновляем данные поля
+                await this.fetchField()
+                this.closeMoveStationDialog()
+                alert('Станция успешно перенесена')
+            } catch (error) {
+                console.error('Ошибка переноса станции:', error)
+                alert('Ошибка при переносе станции')
+            } finally {
+                this.movingStation = false
+            }
+        },
+        closeMoveStationDialog() {
+            this.showMoveStationDialog = false
+            this.selectedStation = null
+            this.moveStationForm.field_id = ''
         },
         formatDate(dateString) {
             if (!dateString) return 'Не указана'
@@ -456,6 +625,9 @@ export default {
         formatDateTime(dateString) {
             if (!dateString) return 'Не указана'
             return new Date(dateString).toLocaleString('ru-RU')
+        },
+        createNewField() {
+            this.$router.push({ name: 'fields.create' })
         }
     }
 }

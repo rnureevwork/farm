@@ -53,6 +53,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::prefix('v1')->group(function () {
         Route::apiResource('stations', StationController::class);
         Route::get('stations/{station}/data', [StationController::class, 'data']);
+        Route::put('stations/{station}/move', [StationController::class, 'moveStation']);
         Route::apiResource('farms', FarmController::class);
         Route::apiResource('fields', FieldController::class);
         Route::apiResource('alerts', AlertController::class)->except(['store']);

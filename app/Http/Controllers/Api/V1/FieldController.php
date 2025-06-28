@@ -12,7 +12,9 @@ class FieldController extends Controller
 {
     public function index(): JsonResponse
     {
-        $fields = Field::with(['farm', 'currentCrop.crop'])->get();
+        $fields = Field::with(['farm', 'currentCrop.crop'])
+            ->withCount('stations')
+            ->get();
         return response()->json($fields);
     }
 

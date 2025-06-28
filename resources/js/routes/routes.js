@@ -224,6 +224,12 @@ export default [
                 meta: { breadCrumb: 'Данные станции' }
             },
             {
+                name: 'stations.show',
+                path: 'stations/:id',
+                component: () => import('../views/admin/stations/Show.vue'),
+                meta: { breadCrumb: 'Детали станции' }
+            },
+            {
                 name: 'fields.index',
                 path: 'fields',
                 component: () => import('../views/admin/fields/Index.vue'),
